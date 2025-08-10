@@ -20,6 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,6 +53,15 @@ public class MassCoinService {
 
     @Autowired
     private ReelRepository reelRepository;
+
+    @Autowired
+    private com.postgresql.MasChat.repository.ChatRepository chatRepository;
+
+    @Autowired
+    private com.postgresql.MasChat.repository.MessageRepository messageRepository;
+
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
 
     // Initialize wallet with 1000 tokens for new users
     @Transactional
@@ -333,7 +343,58 @@ public class MassCoinService {
             recipient.getFullName(),
             recipient.getProfilePicture()
         );
-        
+
+        // Create a chat message so both users see the tip in their chat history
+        try {
+            com.postgresql.MasChat.model.Chat chat = chatRepository
+                .findByUser1AndUser2OrUser2AndUser1(sender, recipient, sender, recipient)
+                .orElseGet(() -> {
+                    com.postgresql.MasChat.model.Chat newChat = new com.postgresql.MasChat.model.Chat();
+                    newChat.setUser1(sender);
+                    newChat.setUser2(recipient);
+                    return chatRepository.save(newChat);
+                });
+
+            com.postgresql.MasChat.model.Message tipMessage = new com.postgresql.MasChat.model.Message();
+            tipMessage.setSender(sender);
+            tipMessage.setRecipient(recipient);
+            // Compose a clear tip message including optional user message
+            StringBuilder contentBuilder = new StringBuilder();
+            contentBuilder.append("MASS TIP: ")
+                .append(sender.getFullName())
+                .append(" sent ")
+                .append(request.getAmount())
+                .append(" MASS to ")
+                .append(recipient.getFullName());
+            if (request.getMessage() != null && !request.getMessage().trim().isEmpty()) {
+                contentBuilder.append(" — \"").append(request.getMessage().trim()).append("\"");
+            }
+            contentBuilder.append(" (Tx #").append(transaction.getId()).append(")");
+            tipMessage.setContent(contentBuilder.toString());
+            tipMessage.setChat(chat);
+            tipMessage.setSentAt(java.time.LocalDateTime.now());
+            tipMessage = messageRepository.save(tipMessage);
+
+            // Broadcast to both users over WebSocket so it appears immediately
+            try {
+                messagingTemplate.convertAndSendToUser(
+                    recipient.getId().toString(),
+                    "/queue/messages",
+                    tipMessage
+                );
+                messagingTemplate.convertAndSendToUser(
+                    sender.getId().toString(),
+                    "/queue/messages",
+                    tipMessage
+                );
+            } catch (Exception e) {
+                System.err.println("Failed to broadcast MASS TIP chat message: " + e.getMessage());
+            }
+        } catch (Exception e) {
+            // Do not fail the transfer if chat message creation fails
+            System.err.println("Failed to persist or emit MASS TIP chat message: " + e.getMessage());
+        }
+
         return new MassCoinDTO.TransactionInfo(transaction);
     }
 
