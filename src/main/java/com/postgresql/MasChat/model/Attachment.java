@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
+@SuppressWarnings("unused")
 @Table(name = "attachments")
 public class Attachment {
     @Id

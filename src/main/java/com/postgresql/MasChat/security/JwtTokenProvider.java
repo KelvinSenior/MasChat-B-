@@ -1,9 +1,7 @@
 package com.postgresql.MasChat.security;
-import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import java.util.Date;
 import java.nio.charset.StandardCharsets;
@@ -32,7 +30,8 @@ public class JwtTokenProvider {
         }
         
         try {
-            SecretKey testKey = getSigningKey();
+            // Ensure signing key is valid
+            getSigningKey();
             System.out.println("JWT configuration is valid");
         } catch (Exception e) {
             System.err.println("JWT configuration validation failed: " + e.getMessage());
@@ -61,9 +60,9 @@ public class JwtTokenProvider {
         System.out.println("Expiration: " + expiration + "ms");
         
         return Jwts.builder()
-                .setSubject(username)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .subject(username)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSigningKey())
                 .compact();
     }

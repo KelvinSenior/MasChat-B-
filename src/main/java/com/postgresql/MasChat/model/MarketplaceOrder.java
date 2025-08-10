@@ -2,7 +2,6 @@ package com.postgresql.MasChat.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "marketplace_orders")

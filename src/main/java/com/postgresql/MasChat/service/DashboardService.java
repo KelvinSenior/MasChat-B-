@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -25,11 +24,7 @@ public class DashboardService {
     @Autowired
     private FriendRepository friendRepository;
 
-    @Autowired
-    private StoryRepository storyRepository;
-
-    @Autowired
-    private ReelRepository reelRepository;
+    // Removed unused repositories to satisfy linter
 
     @Autowired
     private CommentRepository commentRepository;
@@ -37,14 +32,6 @@ public class DashboardService {
     @Autowired
     private LikeRepository likeRepository;
 
-    @Autowired
-    private GroupRepository groupRepository;
-
-    @Autowired
-    private GroupMemberRepository groupMemberRepository;
-
-    @Autowired
-    private AdCampaignRepository adCampaignRepository;
 
     public DashboardStatsDTO getDashboardStats(Long userId) {
         DashboardStatsDTO stats = new DashboardStatsDTO();
@@ -138,7 +125,6 @@ public class DashboardService {
         // Get user
         Optional<User> userOpt = userRepository.findById(userId);
         if (userOpt.isPresent()) {
-            User user = userOpt.get();
             
             // Profile analytics
             analytics.setFollowers(friendRepository.countByFriendId(userId));

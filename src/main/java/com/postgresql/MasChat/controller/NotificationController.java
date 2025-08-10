@@ -175,7 +175,7 @@ public class NotificationController {
     @PostMapping("/create")
     public ResponseEntity<Notification> createNotification(@RequestBody Map<String, Object> request) {
         try {
-            Long userId = Long.valueOf(request.get("userId").toString());
+            @SuppressWarnings("unused") Long userId = Long.valueOf(request.get("userId").toString());
             String title = (String) request.get("title");
             String message = (String) request.get("message");
             Notification.NotificationType type = Notification.NotificationType.valueOf((String) request.get("type"));

@@ -2,7 +2,6 @@ package com.postgresql.MasChat.dto;
 
 import com.postgresql.MasChat.model.AIChat;
 import com.postgresql.MasChat.model.AIChatMessage;
-import com.postgresql.MasChat.dto.AIChatMessageDTO;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;

@@ -6,10 +6,8 @@ import org.springframework.web.bind.annotation.*;
 import com.postgresql.MasChat.model.Message;
 import com.postgresql.MasChat.service.MessageService;
 import com.postgresql.MasChat.dto.RecentChatDTO;
-import com.postgresql.MasChat.model.User;
 
 import java.util.List;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 

@@ -2,7 +2,6 @@ package com.postgresql.MasChat.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -84,8 +83,6 @@ public class MessageService {
     }
 
     public List<Message> getConversation(Long userId1, Long userId2) {
-        User user1 = userRepository.findById(userId1).orElseThrow();
-        User user2 = userRepository.findById(userId2).orElseThrow();
         List<Message> messages = messageRepository.findConversationBetweenUsers(userId1, userId2);
         // Deduplicate by id
         LinkedHashMap<Long, Message> unique = new LinkedHashMap<>();
@@ -94,8 +91,9 @@ public class MessageService {
     }
 
     public List<RecentChatDTO> getRecentChats(Long userId) {
-        User user = userRepository.findById(userId).orElseThrow();
-        
+        // Ensure user exists or throw
+        userRepository.findById(userId).orElseThrow();
+
         // Get all conversations for this user
         List<Message> allMessages = messageRepository.findBySenderIdOrRecipientIdOrderBySentAtDesc(userId);
         

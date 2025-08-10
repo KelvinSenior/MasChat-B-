@@ -14,7 +14,7 @@ Write-Host ""
 
 # Test PostgreSQL connection
 try {
-    $result = psql -U postgres -h localhost -c "SELECT version();" 2>&1
+    psql -U postgres -h localhost -c "SELECT version();" 2>&1 | Out-Null
     Write-Host "✅ PostgreSQL connection successful" -ForegroundColor Green
 } catch {
     Write-Host "❌ Cannot connect to PostgreSQL" -ForegroundColor Red
@@ -37,7 +37,7 @@ Write-Host "=======================" -ForegroundColor Yellow
 
 # Create database if it doesn't exist
 try {
-    $result = psql -U postgres -h localhost -c "CREATE DATABASE `"MasChatDB`";" 2>&1
+    psql -U postgres -h localhost -c "CREATE DATABASE `"MasChatDB`";" 2>&1 | Out-Null
     Write-Host "✅ Database 'MasChatDB' created successfully" -ForegroundColor Green
 } catch {
     Write-Host "ℹ️  Database 'MasChatDB' already exists or creation failed" -ForegroundColor Yellow
@@ -49,7 +49,7 @@ Write-Host "=======================" -ForegroundColor Yellow
 
 # Test connection to the specific database
 try {
-    $result = psql -U postgres -h localhost -d MasChatDB -c "SELECT current_database();" 2>&1
+    psql -U postgres -h localhost -d MasChatDB -c "SELECT current_database();" 2>&1 | Out-Null
     Write-Host "✅ Successfully connected to MasChatDB" -ForegroundColor Green
 } catch {
     Write-Host "❌ Cannot connect to MasChatDB" -ForegroundColor Red
