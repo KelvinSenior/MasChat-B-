@@ -4,13 +4,9 @@ import com.postgresql.MasChat.model.FriendRequest;
 import com.postgresql.MasChat.model.User;
 import com.postgresql.MasChat.repository.FriendRequestRepository;
 import com.postgresql.MasChat.repository.UserRepository;
-import com.postgresql.MasChat.service.NotificationService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -184,10 +180,14 @@ public class FriendService {
             request.setReceiver(receiver);
             request.setStatus("PENDING");
             request.setCreatedAt(LocalDateTime.now());
-            friendRequestRepository.save(request);
+            request = friendRequestRepository.save(request);
             
-            // Notify receiver
-            notificationService.createFriendRequestNotification(sender, receiver);
+            // Notify receiver with related metadata (request id, sender info)
+            try {
+                notificationService.createFriendRequestNotification(sender, receiver, request.getId());
+            } catch (Exception e) {
+                System.err.println("Failed to send friend request notification: " + e.getMessage());
+            }
         } catch (Exception e) {
             System.err.println("Error sending friend request: " + e.getMessage());
             throw e;

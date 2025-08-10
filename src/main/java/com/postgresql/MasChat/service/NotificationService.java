@@ -18,7 +18,7 @@ public class NotificationService {
     @Autowired
     private NotificationRepository notificationRepository;
     @Autowired
-    private UserRepository userRepository;
+    private UserRepository userRepository; // kept for future use
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
 
@@ -45,6 +45,12 @@ public class NotificationService {
             notificationPayload.put("read", saved.isRead());
             notificationPayload.put("createdAt", saved.getCreatedAt());
             notificationPayload.put("type", "NEW_NOTIFICATION");
+            // Optional metadata if present
+            if (saved.getRelatedId() != null) notificationPayload.put("relatedId", saved.getRelatedId());
+            if (saved.getRelatedType() != null) notificationPayload.put("relatedType", saved.getRelatedType());
+            if (saved.getSenderId() != null) notificationPayload.put("senderId", saved.getSenderId());
+            if (saved.getSenderName() != null) notificationPayload.put("senderName", saved.getSenderName());
+            if (saved.getSenderAvatar() != null) notificationPayload.put("senderAvatar", saved.getSenderAvatar());
             
             messagingTemplate.convertAndSendToUser(
                 user.getId().toString(),
@@ -75,6 +81,50 @@ public class NotificationService {
             receiver.getFullName() + " accepted your friend request.",
             Notification.NotificationType.FRIEND_REQUEST
         );
+    }
+
+    // Overload that sets related metadata for friend-request notifications
+    public Notification createFriendRequestNotification(User sender, User receiver, Long requestId) {
+        Notification notification = new Notification();
+        notification.setUser(receiver);
+        notification.setTitle("Friend Request");
+        notification.setMessage(sender.getFullName() + " sent you a friend request.");
+        notification.setNotificationType(Notification.NotificationType.FRIEND_REQUEST);
+        notification.setRead(false);
+        notification.setCreatedAt(LocalDateTime.now());
+        // Set metadata so client can act on it
+        notification.setRelatedId(requestId != null ? requestId.toString() : null);
+        notification.setRelatedType("FRIEND_REQUEST");
+        notification.setSenderId(sender.getId());
+        notification.setSenderName(sender.getFullName());
+        notification.setSenderAvatar(sender.getProfilePicture());
+        Notification saved = notificationRepository.save(notification);
+
+        // Emit with metadata
+        try {
+            Map<String, Object> notificationPayload = new HashMap<>();
+            notificationPayload.put("id", saved.getId());
+            notificationPayload.put("message", saved.getMessage());
+            notificationPayload.put("title", saved.getTitle());
+            notificationPayload.put("read", saved.isRead());
+            notificationPayload.put("createdAt", saved.getCreatedAt());
+            notificationPayload.put("type", "NEW_NOTIFICATION");
+            notificationPayload.put("relatedId", saved.getRelatedId());
+            notificationPayload.put("relatedType", saved.getRelatedType());
+            notificationPayload.put("senderId", saved.getSenderId());
+            notificationPayload.put("senderName", saved.getSenderName());
+            notificationPayload.put("senderAvatar", saved.getSenderAvatar());
+
+            messagingTemplate.convertAndSendToUser(
+                receiver.getId().toString(),
+                "/queue/notifications",
+                notificationPayload
+            );
+        } catch (Exception e) {
+            System.err.println("WebSocket notification failed: " + e.getMessage());
+        }
+
+        return saved;
     }
 
     public List<Notification> getNotifications(User user) {
